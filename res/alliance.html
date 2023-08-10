@@ -1,0 +1,163 @@
+<!doctype html>
+<html">
+  <head>
+    <title>Puntos alianza</title>
+  </head>
+
+
+
+  <body>
+    <container class="container ">
+   
+                <div>
+                <input type="text"  id="server"  placeholder="es,en,fr,etc...">
+                <input type="text" id="world"  placeholder="num">
+                <br>
+
+                <button onclick="abrirPestana()">Cargar datos en nueva pestaña</button>
+                </div>
+                <script>
+                    function abrirPestana() {
+                      //Obtenemos los valores del servidor y el mundo
+                      var inputYY = document.getElementById("server").value;
+                      var inputX = document.getElementById("world").value;
+                
+                      //Construimos la URL
+                      var url = "http://" + inputYY + inputX + ".grepolis.com/data/alliance_kills_all.txt";
+                      var url2 = "http://" + inputYY + inputX + ".grepolis.com/data/alliances.txt";
+                      //Abrimos una nueva pestaña con la URL
+                      window.open(url, "_blank");
+                      window.open(url2, "_blank");
+                    }
+                  </script>
+
+                <br>    
+
+                <!--Leer el text area y cargarlo en un array-->
+                <div>
+                <textarea id="combatantArea" placeholder="Introduce aquí los datos copiados de los combatientes" rows="5"></textarea>
+                <textarea id="allianceArea" placeholder="Introduce aquí los datos copiados de las alianzas" rows="5"></textarea>
+                <br>
+                <button id="miBoton">Construir ranking</button>
+                <br><br>
+                Puntos
+                <textarea id="pointsTextArea" rows="15" readonly></textarea>
+
+                Combatientes
+                <textarea id="combatantTextArea" rows="15" readonly></textarea>
+                </div>
+                <script>
+                    document.getElementById("miBoton").addEventListener("click", function() {
+                    //Obtenemos el contenido del textarea
+                    var allianceArea = document.getElementById("allianceArea");
+                    var contenido1 = allianceArea.value;
+                    //Dividimos en lineas
+                    var lineas = contenido1.split("\n");
+                    //Cada linea tiene su dato
+                    var datos = [];
+                    for (var i = 0; i < lineas.length; i++) {
+                        var linea = lineas[i];
+                        var fila = linea.split(",");
+                      
+                    //Creamos un objeto para cada fila $id, $name, $points, $villages, $members, $rank
+                    var objetoFila = {
+                        id: fila[0],
+                        nombre: decodeURIComponent(fila[1]).replace(/\+/g," "),
+                        puntos: fila[2],
+                        aldeas: fila[3],
+                        miembros: fila[4],
+                        rango: fila[5]
+                        };
+                        datos.push(objetoFila);
+                    }
+                    //Ordenamos todas las lineas de menor a mayor en funcion del ranking (1,2,3...) y cogemos las 16 primeras
+                    datos.sort(function(a, b) {
+                        return a.rango - b.rango;
+                    });
+                    var primerasFilas = datos.slice(0,15);
+
+
+
+                    //Cargamos los datos de los combatientes    COMBATIENTESAREA
+                    var combatantArea = document.getElementById("combatantArea");
+                    var contenido2 = combatantArea.value;
+                    var lineas2 = contenido2.split("\n");
+                    var datos2 = [];
+
+                    for (var i=0; i<lineas2.length; i++){
+                        var linea2 = lineas2[i];
+                        var fila2 = linea2.split(",");
+                    
+                        // COMBATIENTES $rank, alliance_id, $points
+                    var objetoFila2= {
+                        rank: fila2[0],
+                        allianceId: fila2[1],
+                        puntos: fila2[2]
+                        };
+                        datos2.push(objetoFila2);
+                    }
+                    
+                    datos2.sort(function(a,b){
+                        return a.rank - b.rank;
+                    });
+
+                    var primerasFilas2 = datos2.slice(0,15);
+
+                    console.log(primerasFilas2);
+
+                    //Una vez los 15 player ID(primerasFilas2) buscar en jugadores (datos) y añadir valor nombre
+
+                    for (var i=0; i<primerasFilas2.length; i++){
+                        for (var j=0; j<datos.length; j++){
+                            if(primerasFilas2[i].allianceId == datos[j].id){
+                                var fila = primerasFilas2[i];
+                                fila["nombre"] = datos[j].nombre;
+                                break;
+                            }
+                        }
+                    }
+
+                    console.log(primerasFilas2);
+
+
+
+                    // Creamos la tabla  ALIANZAS cargando los datos y añadiendo una fila por cada fila que contenga (16-1 filas)
+                    var cadenaTabla = "[CENTER][IMG]https://media.innogamescdn.com/com_GP_ES/Mundos/Anuncios/mundos_ranking_alianza_puntos.png[/IMG][/Center]\n [Center][Spoiler=Puntos alianza] \n [SIZE=5][TABLE][TR][TD][B]    Posición    [/B][/TD][TD][B]    Jugador [/B][/TD][TD][B]    Puntos  [/B][/TD][/TR]";
+                        for (var j = 0; j < primerasFilas.length; j++) {
+                     
+                        var filaActual = primerasFilas[j];
+                        var nombre = filaActual.nombre;
+                        var puntos = filaActual.puntos;
+                        var posicion = (j+1);
+                        cadenaTabla += "[TR][TD][B][COLOR=#1f64d8]" + posicion  +"[/COLOR][/B][/TD][TD]"+   nombre  +"[/TD][TD]"+   puntos +    "[/TD][/TR]\n";
+                        }
+                        cadenaTabla += "[/TABLE][/SIZE][/Spoiler][/Center]";
+                        //Mostramos el codigo en el otro textArea listo para copiar y pegar
+                        var pointsTextArea = document.getElementById("pointsTextArea");
+                        pointsTextArea.value = cadenaTabla;
+                        
+                     // Creamos la tabla  COMBATIENTES cargando los datos y añadiendo una fila por cada fila que contenga (16-1 filas)
+                    var cadenaTabla2 = "[CENTER][IMG]https://media.innogamescdn.com/com_GP_ES/Mundos/Anuncios/mundos_ranking_alianza_puntos.png[/IMG][/Center]\n [Center][Spoiler=Combatientes alianza] \n [SIZE=5][TABLE][TR][TD][B]    Posición    [/B][/TD][TD][B]    Jugador [/B][/TD][TD][B]    Puntos  [/B][/TD][/TR]";
+                        for (var j = 0; j < primerasFilas2.length; j++) {
+                     
+                        var filaActual = primerasFilas2[j];
+                        var nombre = filaActual.nombre;
+                        var puntos = filaActual.puntos;
+                        var posicion = (j+1);
+                        cadenaTabla2 += "[TR][TD][B][COLOR=#1f64d8]" + posicion  +"[/COLOR][/B][/TD][TD]"+   nombre  +"[/TD][TD]"+   puntos +    "[/TD][/TR]\n";
+                        }
+                        cadenaTabla2 += "[/TABLE][/SIZE][/Spoiler][/Center]";
+                        //Mostramos el codigo en el otro textArea listo para copiar y pegar
+                        var combatantTextArea = document.getElementById("combatantTextArea");
+                        combatantTextArea.value = cadenaTabla2;
+
+
+                     
+
+
+                    });
+                </script>
+    </container>
+ 
+  </body>
+</html>
